@@ -51,6 +51,12 @@ public class HomeController {
 		return "redirect:/index";
 	}
 	
+	@GetMapping("/register")
+	public String doGetRegister(Model model) {
+		model.addAttribute("userRequest", new Users());
+		return "user/register";
+	}
+	
 	@PostMapping("/login")
 	public String doPostLogin(@ModelAttribute("userRequest") Users userRequest, HttpSession session) {
 		Users userResponse = usersService.doLogin(userRequest);
@@ -59,5 +65,21 @@ public class HomeController {
 			return "redirect:/index";
 		}
 		return "redirect:/login";
+	}
+	
+	@PostMapping("/register")
+	public String doPostRegister(@ModelAttribute("userRequest") Users userRequest, HttpSession session) {
+		try {
+			Users userResponse = usersService.save(userRequest);
+			if (ObjectUtils.isNotEmpty(userResponse)) {
+				session.setAttribute(SessionConstant.CURRENT_USER, userResponse);
+				return "redirect:/index";
+			} else {
+				return "redirect:/register";
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			return "redirect:/register";
+		}
 	}
 }
