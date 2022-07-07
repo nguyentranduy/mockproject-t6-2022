@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.mockproject.entity.Products;
@@ -34,6 +35,16 @@ public class ProductApi {
 		Products product = productsService.findBySlug(slug);
 		if (ObjectUtils.isEmpty(product)) {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST); // 400
+		} 
+		return ResponseEntity.ok(product);
+	}
+	
+	// localhost:8080/api/products/find?id={...}
+	@GetMapping("/find")
+	public ResponseEntity<?> doGetById(@RequestParam("id") Long id) {
+		Products product = productsService.findById(id);
+		if (ObjectUtils.isEmpty(product)) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 404
 		} 
 		return ResponseEntity.ok(product);
 	}
