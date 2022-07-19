@@ -42,9 +42,29 @@ public class CartServiceImpl implements CartService {
 		} else {
 			details.remove(productId);
 		}
-		// update totalQuantity
-		// update totalPrice
+		cart.setTotalQuantity(getTotalQuantity(cart));
+		cart.setTotalPrice(getTotalPrice(cart));
 		return cart;
+	}
+	
+	@Override
+	public Integer getTotalQuantity(CartDto cart) {
+		Integer totalQuantity = 0;
+		HashMap<Long, CartDetailDto> details = cart.getDetails();
+		for (CartDetailDto cartDetail : details.values()) {
+			totalQuantity += cartDetail.getQuantity();
+		}
+		return totalQuantity;
+	}
+
+	@Override
+	public Double getTotalPrice(CartDto cart) {
+		Double totalPrice = 0D;
+		HashMap<Long, CartDetailDto> details = cart.getDetails();
+		for (CartDetailDto cartDetail : details.values()) {
+			totalPrice += (cartDetail.getPrice() * cartDetail.getQuantity());
+		}
+		return totalPrice;
 	}
 	
 	private CartDetailDto createNewCartDetail(Products product, Integer quantity) {
@@ -57,5 +77,4 @@ public class CartServiceImpl implements CartService {
 		cartDetailDto.setName(product.getName());
 		return cartDetailDto;
 	}
-
 }

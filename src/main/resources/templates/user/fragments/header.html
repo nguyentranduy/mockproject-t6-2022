@@ -22,9 +22,10 @@
 	                    <div class="shopping-item">
 	                        <a th:href="@{/cart}">
 	                        	Cart - <span class="cart-amunt" 
-	                        				id="headerTotalPrice">0</span> 
+	                        				id="headerTotalPrice" th:text="${#numbers.formatCurrency(session.currentCart.totalPrice)}"></span> 
 	                        	<i class="fa fa-shopping-cart"></i> <span class="product-count"
-	                        												id="headerTotalQuantity">0</span></a>
+	                        												id="headerTotalQuantity"
+	                        												th:text="${session.currentCart.totalQuantity}"></span></a>
 	                    </div>
 	                </div>
 	            </div>
