@@ -3,6 +3,9 @@ package com.mockproject.service.impl;
 import java.util.List;
 import java.util.Optional;
 
+import javax.transaction.Transactional;
+import javax.transaction.Transactional.TxType;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,5 +33,13 @@ public class ProductsServiceImpl implements ProductsService {
 	@Override
 	public Products findBySlug(String slug) {
 		return repo.findBySlug(slug);
+	}
+
+	// sau nay neu thuc hien update quantity trong admin 
+	// ma bi bug thi nho bo value = TxType di
+	@Transactional(value = TxType.REQUIRED)
+	@Override
+	public void updateQuantity(Integer newQuantity, Long id) {
+		repo.updateQuantity(newQuantity, id);
 	}
 }

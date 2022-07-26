@@ -2,13 +2,20 @@ package com.mockproject.service.impl;
 
 import java.util.HashMap;
 
+import javax.transaction.Transactional;
+
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.mockproject.dto.CartDetailDto;
 import com.mockproject.dto.CartDto;
+import com.mockproject.entity.Orders;
 import com.mockproject.entity.Products;
+import com.mockproject.entity.Users;
 import com.mockproject.service.CartService;
+import com.mockproject.service.OrderDetailsService;
+import com.mockproject.service.OrdersService;
 import com.mockproject.service.ProductsService;
 
 @Service
@@ -16,6 +23,12 @@ public class CartServiceImpl implements CartService {
 	
 	@Autowired
 	private ProductsService productsService;
+	
+	@Autowired
+	private OrdersService ordersService;
+	
+	@Autowired
+	private OrderDetailsService orderDetailsService;
 
 	@Override
 	public CartDto updateCart(CartDto cart, Long productId, Integer quantity, boolean isReplace) {
@@ -76,5 +89,32 @@ public class CartServiceImpl implements CartService {
 		cartDetailDto.setSlug(product.getSlug());
 		cartDetailDto.setName(product.getName());
 		return cartDetailDto;
+	}
+
+	@Transactional(rollbackOn = {Exception.class})
+	@Override
+	public void insert(CartDto cartDto, Users user, String address, String phone) throws Exception {
+		// insert vao bang ORDERS
+		Orders order = new Orders();
+		order.setUser(user);
+		order.setAddress(address);
+		order.setPhone(phone);
+		
+		Orders orderResponse = ordersService.insert(order);
+		
+		if (ObjectUtils.isEmpty(orderResponse)) {
+			throw new Exception("Insert into order table failed");
+		}
+		
+		// insert vao bang ORDER_DETAILS
+		for (CartDetailDto cartDetailDto : cartDto.getDetails().values()) {
+			cartDetailDto.setOrderId(orderResponse.getId());
+			orderDetailsService.insert(cartDetailDto);
+			
+			// update new quantity cho bang PRODUCTS
+			Products product = productsService.findById(cartDetailDto.getProductId());
+			Integer newQuantity = product.getQuantity() - cartDetailDto.getQuantity();
+			productsService.updateQuantity(newQuantity, product.getId());
+		}
 	}
 }

@@ -123,7 +123,8 @@
                                     <tr class="cart_item" th:each="detail, i : ${session.currentCart.details}">
                                         <td th:text="${i.index + 1}"></td>
                                         <td class="product-remove">
-                                            <a title="Remove this item" class="remove">×</a>
+                                            <a title="Remove this item" class="remove"
+                                            	th:attr="onclick='removeProduct(\'' + ${detail.key} + '\')'">×</a>
                                         </td>
                                         <td class="product-thumbnail">
                                             <a>
@@ -141,7 +142,9 @@
                                         <td class="product-quantity">
                                             <div class="quantity buttons_added">
                                                 <input type="number" class="input-text qty text" title="Qty"
-                                                	th:value="${detail.value.quantity}">
+                                                	th:value="${detail.value.quantity}"
+                                                	th:id="quantity + ${detail.key}"
+                                                	th:attr="onchange='updateQuantity(\'' + ${detail.key} + '\')'">
                                             </div>
                                         </td>
                                         <td class="product-subtotal">
@@ -164,7 +167,8 @@
                                    	<tr>
                                    		<td colspan="12">
                                      	  	<input type="submit" value="Checkout" 
-                                     	  		name="proceed" class="checkout-button button alt wc-forward"/>
+                                     	  		name="proceed" class="checkout-button button alt wc-forward"
+                                     	  		th:attr="onclick='checkout()'"/>
 										</td>
 									</tr>
                                 </tbody>
@@ -218,5 +222,75 @@
     <!-- Slider -->
     <script type="text/javascript" th:src="@{/user/js/bxslider.min.js}"></script>
 	<script type="text/javascript" th:src="@{/user/js/script.slider.js}"></script>
+	
+	<script>
+		function removeProduct(productId) {
+			var url = '/cart/update?productId=' + productId + '&quantity=0&isReplace=true';
+			$.get(url).done(function(data) {
+				$('#viewCartFragment').replaceWith(data);
+				callApiRefreshCart();
+			});
+		}
+		
+		function updateQuantity(productId) {
+			var idInput = '#quantity' + productId;
+			var newQuantity = $(idInput).val();
+			var url = '/cart/update?productId=' + productId + '&quantity=' + newQuantity + '&isReplace=true';
+			$.get(url).done(function(data) {
+				$('#viewCartFragment').replaceWith(data);
+				callApiRefreshCart();
+			});
+		}
+		
+		function callApiRefreshCart() {
+			var url = '/api/cart/refresh';
+			$.ajax({
+				url: url,
+				type: 'GET',
+				dataType: 'json',
+				success: function(data) {
+					$('#headerTotalPrice').text(formatCurrency(data.totalPrice));
+					$('#headerTotalQuantity').text(data.totalQuantity);
+				},
+				error: function(error) {
+					alert(error);
+				}
+			})
+		}
+		
+		function checkout() {
+			var address = $('#address').val();
+			var phone = $('#phone_number').val();
+			var url = '/api/cart/checkout?address=' + address + '&phone=' + phone;
+			$.ajax({
+				url: url,
+				type: 'GET',
+				statusCode: {
+					200: handle200,
+					400: handle400,
+					401: handle401
+				}
+			});
+		}
+		
+		function handle200() {
+			alert('Your payment was created successfully');
+			window.location.href = '/index';
+		}
+		
+		function handle400() {
+			alert('Checkout failed, please try again');
+		}
+		
+		function handle401() {
+			alert('Please login before paying');
+			window.location.href = '/login';
+		}
+		
+		function formatCurrency(x) {
+			return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + ' ₫';
+		}
+	</script>
+	
 </body>
 </html>
